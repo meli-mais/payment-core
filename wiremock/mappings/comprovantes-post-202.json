@@ -1,0 +1,15 @@
+{
+  "priority": 10,
+  "request": {
+    "method": "POST",
+    "urlPath": "/comprovantes"
+  },
+  "response": {
+    "status": 202,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "identificador_comprovante": "b819cc65-f6f0-478c-8bb7-69ee1c4f6402",
+      "data_hora_requisicao": "2026-07-08T20:03:57.116061100Z"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "priority": 2,
+  "request": {
+    "method": "POST",
+    "urlPath": "/comprovantes",
+    "bodyPatterns": [
+      { "matchesJsonPath": "$[?(@.numero_documento == '22222222222')]" }
+    ]
+  },
+  "response": {
+    "status": 202,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "identificador_comprovante": "isso-nao-e-um-uuid",
+      "data_hora_requisicao": "2026-07-08T20:03:57.116061100"
+    }
+  }
+}

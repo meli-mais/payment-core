@@ -1,0 +1,15 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "GET",
+    "url": "/comprovantes/b819cc65-f6f0-478c-8bb7-69ee1c4f6402"
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "jsonBody": {
+      "identificador_comprovante": "b819cc65-f6f0-478c-8bb7-69ee1c4f6402",
+      "status": "PERSISTIDO"
+    }
+  }
+}
