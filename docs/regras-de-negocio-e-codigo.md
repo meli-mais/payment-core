@@ -66,7 +66,7 @@ Campos obrigatórios e regras — `infrastructure/adapter/http/PagamentoRequest.
 | `numero_documento` | obrigatório | `@NotBlank` |
 | `numero_agencia` / `numero_conta` / `digito_verificador_conta` | obrigatórios | `@NotBlank` cada um |
 | `valor_transacao` | obrigatório, > 0 | `@NotNull @Positive` + `ValorTransacao` arredonda pra 2 casas (`domain/model/ValorTransacao.java`) |
-| `tipo_chave_pix_destino` | obrigatório, enum válido | `@NotBlank` + `TipoChavePix.valueOf()` |
+| `tipo_chave_pix_destino` | obrigatório, um de `CELULAR`/`EMAIL`/`CPF`/`CNPJ`/`CHAVE_ALEATORIA` | `@NotBlank` + `TipoChavePix.valueOf()` (`domain/model/TipoChavePix.java`). Os nomes DEVEM bater com o enum do Comprovantes (provider) — `CHAVE_ALEATORIA`, não `ALEATORIA`; teste em `ComprovanteRequestTest`. |
 | `chave_pix_destino` / `nome_cliente_destino` | obrigatórios | `@NotBlank` |
 | `identificacao_pix` | **opcional** | sem anotação |
 | `data_hora_transacao` | obrigatório, formato `LocalDateTime` (SEM timezone/offset — ver regra 2.2) | `@NotNull` |
