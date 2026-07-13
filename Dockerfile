@@ -1,10 +1,11 @@
-FROM eclipse-temurin:21-jdk AS build
+# Build com Maven pré-instalado — evita depender do ./mvnw (que quebra em build Docker
+# quando o checkout no Windows aplica CRLF ao script ou perde o bit de execução).
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
-RUN ./mvnw -q dependency:go-offline
+COPY pom.xml ./
+RUN mvn -q -B dependency:go-offline
 COPY src ./src
-RUN ./mvnw -q package -DskipTests
+RUN mvn -q -B package -DskipTests
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
