@@ -1,13 +1,14 @@
+# syntax=docker/dockerfile:1.4
 # Build com Maven pré-instalado — evita depender do ./mvnw (que quebra em build Docker
 # quando o checkout no Windows aplica CRLF ao script ou perde o bit de execução).
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
-# Empacota pulando testes (-Dmaven.test.skip pula compilar E rodar): não baixa as
-# dependências de teste pesadas (Pact, WireMock, ArchUnit), deixando o build da imagem
-# muito mais rápido. A verificação de testes fica no CI (mvn test), não no Docker.
+# - cache mount do .m2: persiste as dependências baixadas ENTRE builds (retries acumulam,
+#   não re-baixam tudo a cada mudança de pom).
+# - -Dmaven.test.skip=true: pula compilar/rodar testes, não baixa deps de teste (Pact/WireMock/ArchUnit).
 COPY pom.xml ./
 COPY src ./src
-RUN mvn -q -B -Dmaven.test.skip=true package
+RUN --mount=type=cache,target=/root/.m2 mvn -q -B -Dmaven.test.skip=true package
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
