@@ -2,6 +2,7 @@ package com.projetocore.payment.contract;
 
 import au.com.dius.pact.consumer.MockServer;
 import au.com.dius.pact.consumer.dsl.PactBuilder;
+import au.com.dius.pact.consumer.dsl.PactDslJsonBody;
 import au.com.dius.pact.consumer.junit5.PactConsumerTestExt;
 import au.com.dius.pact.consumer.junit5.PactTestFor;
 import au.com.dius.pact.core.model.V4Pact;
@@ -23,11 +24,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * Testes de contrato (requisito 4 do desafio): payment-service como CONSUMIDOR do contrato do
  * microsserviço de Comprovantes. O pacto gerado em {@code target/pacts/} é o artefato que o
- * time de Comprovantes (Membro 2/3) usa para rodar a verificação do lado provider
- * (constitution.md, Princípio V). API do pact-jvm 4.6.x (DSL {@code PactBuilder}).
+ * time de Comprovantes usa para rodar a verificação do lado provider (constitution.md,
+ * Princípio V). API do pact-jvm 4.6.x (DSL {@code PactBuilder}).
+ *
+ * IMPORTANTE — verificação cruzada: o {@code providerName} e os {@code given(...)} (provider
+ * states) abaixo batem EXATAMENTE com os do provider real (ms-comprovantes,
+ * {@code ComprovanteProviderPactTest}: provider "ms-comprovantes-api"; states "um payload de
+ * comprovante valido", "comprovante existe", "comprovante nao existe"). Só assim o pact gerado
+ * aqui pode ser verificado do lado deles. Ver {@code payment-ecosystem/contracts/README.md}.
  */
 @ExtendWith(PactConsumerTestExt.class)
-@PactTestFor(providerName = "comprovantes-service")
+@PactTestFor(providerName = "ms-comprovantes-api")
 class ComprovanteContractTest {
 
     private static final String COMPROVANTE_ID = "b819cc65-f6f0-478c-8bb7-69ee1c4f6402";
@@ -61,17 +68,17 @@ class ComprovanteContractTest {
             }
             """.formatted(DATA_HORA_TRANSACAO);
 
-    private static final String RESPONSE_202_JSON = """
-            {
-              "identificador_comprovante": "%s",
-              "data_hora_requisicao": "2026-07-08T20:03:57.116061100"
-            }
-            """.formatted(COMPROVANTE_ID);
-
     @Pact(consumer = "payment-service")
     V4Pact solicitacaoAceita(PactBuilder builder) {
+        // Resposta 202 com MATCHERS (não valores exatos): o provider gera identificador e
+        // timestamp em runtime. Casa com o que o provider real devolve no state
+        // "um payload de comprovante valido" (UUID aleatório + data truncada a segundos).
+        PactDslJsonBody resposta202 = new PactDslJsonBody()
+                .uuid("identificador_comprovante", COMPROVANTE_ID)
+                .datetime("data_hora_requisicao", "yyyy-MM-dd'T'HH:mm:ss");
+
         return builder
-                .given("o serviço de Comprovantes está disponível")
+                .given("um payload de comprovante valido")
                 .expectsToReceiveHttpInteraction("uma solicitação válida de comprovante PIX", http -> http
                         .withRequest(req -> req
                                 .method("POST")
@@ -81,14 +88,14 @@ class ComprovanteContractTest {
                         .willRespondWith(res -> res
                                 .status(202)
                                 .header("Content-Type", "application/json")
-                                .body(RESPONSE_202_JSON, "application/json")))
+                                .body(resposta202)))
                 .toPact();
     }
 
     @Pact(consumer = "payment-service")
     V4Pact comprovanteJaPersistido(PactBuilder builder) {
         return builder
-                .given("um comprovante com id " + COMPROVANTE_ID + " já foi persistido")
+                .given("comprovante existe")
                 .expectsToReceiveHttpInteraction("uma consulta de confirmação de comprovante existente", http -> http
                         .withRequest(req -> req
                                 .method("GET")
@@ -100,7 +107,7 @@ class ComprovanteContractTest {
     @Pact(consumer = "payment-service")
     V4Pact comprovanteNaoEncontrado(PactBuilder builder) {
         return builder
-                .given("nenhum comprovante existe com esse id")
+                .given("comprovante nao existe")
                 .expectsToReceiveHttpInteraction("uma consulta de confirmação de comprovante inexistente", http -> http
                         .withRequest(req -> req
                                 .method("GET")
